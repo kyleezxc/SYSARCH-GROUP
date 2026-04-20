@@ -1,6 +1,9 @@
 import requests
 import urllib.parse
-
+import polyline # Add this to your imports
+import folium
+import os
+import webbrowser
 
 # ANSII COLORS 
 RESET = "\033[0m"
@@ -19,6 +22,58 @@ key = "ac6d5721-c184-4e80-b0de-63937807d098"
 
 # Users 
 users = {}
+
+
+def generate_map(orig, dest, paths_data):
+
+    start_coords = (orig[1], orig[2])
+    dest_coords = (dest[1], dest[2])
+    route_map = folium.Map(location = start_coords, zoom_start = 17, control_scale = True)
+
+    encoded_polyline = paths_data["paths"][0]["points"]
+    decoded_coordinates = polyline.decode(encoded_polyline)
+
+    folium.PolyLine(
+        locations=decoded_coordinates,
+        color="#3388ff",
+        weight=6,
+        opacity=0.8,
+        tooltip="Route Path"
+    ).add_to(route_map)
+
+    # 4. Add custom markers with icons
+    folium.Marker(
+        start_coords, 
+        popup=f"<b>Start:</b> {orig[3]}", 
+        icon=folium.Icon(color='green', icon='play')
+    ).add_to(route_map)
+
+    folium.Marker(
+        dest_coords, 
+        popup=f"<b>End:</b> {dest[3]}", 
+        icon=folium.Icon(color='red', icon='stop')
+    ).add_to(route_map)
+
+    
+    title_html = f'''
+             <div style="position: fixed; 
+                         bottom: 50px; left: 50px; width: 250px; height: 100px; 
+                         background-color: white; border:2px solid grey; z-index:9999; font-size:14px;
+                         border-radius: 10px; padding: 10px;">
+             <b>Navigation Summary</b><br>
+             From: {orig[3][:20]}...<br>
+             To: {dest[3][:20]}...<br>
+             Distance: {paths_data["paths"][0]["distance"]/1000:.2f} km
+             </div>
+             '''
+    route_map.get_root().html.add_child(folium.Element(title_html))
+
+    map_file = "navigation_ui.html"
+    route_map.save(map_file)
+    print("╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗")
+    print("║" +GREEN + f" Visual UI saved to: {os.path.abspath(map_file)}" + RESET + "║")
+    print("╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝")
+    webbrowser.open('file://' + os.path.realpath(map_file))
 
 def login():
     print(BLUE + BOLD +"╔════════════════════════════════════════════════╗")
@@ -47,12 +102,15 @@ def register():
     new_username = input("New Username: ")
     new_password = input("New Password: ")
 
-    if new_username in users:
-        print(RED + "Username already exists. Please choose a different username." + RESET)
+    if new_username == "" or new_password == "":
+        print(RED + "Username and password cannot be empty. Please try again." + RESET)
     else:
-        users[new_username] = new_password
-        print(GREEN + "Account created successfully! You can now log in." + RESET)
-        login()
+        if new_username in users:
+            print(RED + "Username already exists. Please choose a different username." + RESET)
+        else:
+            users[new_username] = new_password
+            print(GREEN + "Account created successfully! You can now log in." + RESET)
+            login()
 
 def geocoding(location, key):
 
@@ -178,10 +236,11 @@ def main():
                     print("╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗")
                     print("║ {0} ( {1:.1f} km / {2:.1f} miles )".format(path, distance/1000, distance/1000/1.61))
                     print("╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝")
+                generate_map(orig, dest, paths_data)
             else:
                 print("║ Error message: " + paths_data["message"])
                 print("╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝")
-    
+
 def developers():
     print(BLUE + BOLD +"╔════════════════════════════════════════════════╗")
     print("║   🔵 DEVELOPERS                                ║"+ RESET)
@@ -204,7 +263,8 @@ while True:
     print("1. Login")
     print("2. Create Account")
     print("3. Developers")
-    print("4. Exit")
+    print("4. View Account Counts")
+    print("5. Exit")
     command = input("Enter command number: ")
 
     if command == "1":
@@ -214,6 +274,8 @@ while True:
         register()
     elif command == "3":
         developers()
-    elif command == "4" or command.lower() == "exit" or command.lower() == "quit":
+    elif command == "4":
+        print(GREEN + f"Total registered accounts: {len(users)}" + RESET)
+    elif command == "5" or command.lower() == "exit" or command.lower() == "quit":
         print(GREEN + "Exiting the program. Goodbye!" + RESET)
         exit()
