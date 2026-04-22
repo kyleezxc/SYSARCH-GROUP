@@ -22,7 +22,7 @@ key = "ac6d5721-c184-4e80-b0de-63937807d098"
 
 # Users 
 users = {}
-
+last_route = None
 
 def generate_map(orig, dest, paths_data):
 
@@ -160,12 +160,15 @@ def geocoding(location, key):
     return json_status, lat, lng, new_loc
 
 def welcome():
+    global last_route
+    
     print("╔════════════════════════════════════════════════╗")
     print("║" + GREEN + "     Welcome to the Command Navigation Tool!    " + RESET + "║")
     print("╚════════════════════════════════════════════════╝")
     print(YELLOW + BOLD + "Choose command below" + RESET)
     print("1. Navigate Directions")
     print("2. Exit")
+    print("3. View Last Route")
     command = input("Enter command number: ")
     if command == "1":
         main()
@@ -174,9 +177,21 @@ def welcome():
         exit()
     else:
         print(RED + "Invalid command. Please try again." + RESET)
+elif command == "3":
+    if last_route"
+        print(GREEN + "╔════════════════════════════════╗" + RESET)
+        print(GREEN + "║        LAST SAVED ROUTE        ║" + RESET)
+        print(GREEN + "╚════════════════════════════════╝" + RESET)
+        print(f"From: {last_route['from']}")
+        print(f"To: {last_route['to']}")
+        print(f"Distance: {last_route['distance']:.2f} km")
+        print(f"Duration: {last_route['time']}")
+    else:
+        print(RED + "No route saved yet." + RESET)
 
 def main():
-
+    global last_route
+    
     while True:
         print("╔════════════════════════════════════════════════════════╗")
         print("║" + GREEN +"        Vehicle profiles available on Graphhopper" + RESET + "       ║")
@@ -229,6 +244,12 @@ def main():
 
                 print("║ Distance Traveled: {0:.1f} miles / {1:.1f} km".format(miles, km))
                 print("║ Trip Duration: {0:02d}:{1:02d}:{2:02d}".format(hr, min, sec))
+                last_route = {
+                    "from": orig[3],
+                    "to": dest[3],
+                    "distance": km,
+                    "time": f"{hr:02d}:{min:02d}:{sec:02d}"
+                }
                 print("╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝")
                 for each in range(len(paths_data["paths"][0]["instructions"])):
                     path = paths_data["paths"][0]["instructions"][each]["text"]
