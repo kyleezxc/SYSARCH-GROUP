@@ -30,7 +30,7 @@ def generate_map(orig, dest, paths_data):
     dest_coords = (dest[1], dest[2])
     route_map = folium.Map(location = start_coords, zoom_start = 17, control_scale = True)
 
-    encoded_polyline = paths_data["paths"][0]["points"]
+    encoded_polyline = paths_data["points"]
     decoded_coordinates = polyline.decode(encoded_polyline)
 
     folium.PolyLine(
@@ -55,7 +55,7 @@ def generate_map(orig, dest, paths_data):
     ).add_to(route_map)
 
     
-    title_html = f'''
+   title_html = f'''
              <div style="position: fixed; 
                          bottom: 50px; left: 50px; width: 250px; height: 100px; 
                          background-color: white; border:2px solid grey; z-index:9999; font-size:14px;
@@ -63,7 +63,7 @@ def generate_map(orig, dest, paths_data):
              <b>Navigation Summary</b><br>
              From: {orig[3][:20]}...<br>
              To: {dest[3][:20]}...<br>
-             Distance: {paths_data["paths"][0]["distance"]/1000:.2f} km
+             Distance: {paths_data["distance"]/1000:.2f} km
              </div>
              '''
     route_map.get_root().html.add_child(folium.Element(title_html))
@@ -209,7 +209,14 @@ def main():
         if orig[0] == 200 and dest[0] == 200:
             op = "&point="+str(orig[1])+"%2C"+str(orig[2])
             dp = "&point="+str(dest[1])+"%2C"+str(dest[2])
-            paths_url = route_url + urllib.parse.urlencode({"key":key, "vehicle":vehicle}) + op + dp
+params = {
+    "key": key,
+    "vehicle": vehicle,
+    "ch.disable": "true",
+    "algorithm": "alternative_route",
+    "alternative_route.max_paths": 3
+}
+paths_url = route_url + urllib.parse.urlencode(params) + op + dp
             paths_status = requests.get(paths_url).status_code
             paths_data = requests.get(paths_url).json()
 
@@ -220,27 +227,34 @@ def main():
             print("║ Directions from " + orig[3] + " to " + dest[3] + " by " + vehicle)
             print("╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝")
             print("╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗")
-            if paths_status == 200:
-                miles = (paths_data["paths"][0]["distance"])/1000/1.61
-                km = (paths_data["paths"][0]["distance"])/1000
-                sec = int(paths_data["paths"][0]["time"]/1000%60)
-                min = int(paths_data["paths"][0]["time"]/1000/60%60)
-                hr = int(paths_data["paths"][0]["time"]/1000/60/60)
+           if paths_status == 200 and "paths" in paths_data:
 
-                print("║ Distance Traveled: {0:.1f} miles / {1:.1f} km".format(miles, km))
-                print("║ Trip Duration: {0:02d}:{1:02d}:{2:02d}".format(hr, min, sec))
-                print("╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝")
-                for each in range(len(paths_data["paths"][0]["instructions"])):
-                    path = paths_data["paths"][0]["instructions"][each]["text"]
-                    distance = paths_data["paths"][0]["instructions"][each]["distance"]
-                    print("╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗")
-                    print("║ {0} ( {1:.1f} km / {2:.1f} miles )".format(path, distance/1000, distance/1000/1.61))
-                    print("╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝")
-                generate_map(orig, dest, paths_data)
-            else:
-                print("║ Error message: " + paths_data["message"])
-                print("╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝")
+    print("╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗")
+    print("║ Available Routes")
+    print("╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝")
 
+    for i, route in enumerate(paths_data["paths"]):
+        km = route["distance"] / 1000
+        sec_total = route["time"] / 1000
+
+        hr = int(sec_total // 3600)
+        min = int((sec_total % 3600) // 60)
+        sec = int(sec_total % 60)
+
+        print(f"\nRoute {i+1}")
+        print(f"Distance: {km:.2f} km")
+        print(f"Time: {hr:02d}:{min:02d}:{sec:02d}")
+
+    choice = int(input("\nChoose route (1-3): ")) - 1
+
+    if choice < 0 or choice >= len(paths_data["paths"]):
+        print("Invalid choice.")
+        return
+    selected_path = paths_data["paths"][choice]
+    generate_map(orig, dest, selected_path)
+
+else:
+    print("║ Error message: " + paths_data["message"])
 def developers():
     print(BLUE + BOLD +"╔════════════════════════════════════════════════╗")
     print("║   🔵 DEVELOPERS                                ║"+ RESET)
