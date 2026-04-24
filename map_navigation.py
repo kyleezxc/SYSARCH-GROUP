@@ -57,7 +57,7 @@ def generate_map(orig, dest, paths_data):
     
     title_html = f'''
              <div style="position: fixed; 
-                         bottom: 50px; left: 50px; width: 250px; height: 100px; 
+                         bottom: 50px; left: 50px; width: 500px; height: 500px; 
                          background-color: white; border:2px solid grey; z-index:9999; font-size:14px;
                          border-radius: 10px; padding: 10px;">
              <b>Navigation Summary</b><br>
@@ -160,8 +160,8 @@ def geocoding(location, key):
     return json_status, lat, lng, new_loc
 
 def welcome():
-    print("╔════════════════════════════════════════════════╗")
-    print("║" + GREEN + "     Welcome to the Command Navigation Tool!    " + RESET + "║")
+    print("╔════════════════════════════════════════════════╗")                       
+    print("║" + GREEN + "     Welcome to the Map Planner !               " + RESET + "║")
     print("╚════════════════════════════════════════════════╝")
     print(YELLOW + BOLD + "Choose command below" + RESET)
     print("1. Navigate Directions")
@@ -275,7 +275,9 @@ while True:
     elif command == "3":
         developers()
     elif command == "4":
-        print(GREEN + f"Total registered accounts: {len(users)}" + RESET)
+        print(BLUE + BOLD +"╔════════════════════════════════════════════════╗")
+        print(BLUE + BOLD +"║" + RESET + GREEN + f"         Total registered accounts: {len(users)}" + RESET + BLUE + BOLD +"           ║" + RESET )
+        print(BLUE + BOLD +"╚════════════════════════════════════════════════╝" + RESET)
     elif command == "5" or command.lower() == "exit" or command.lower() == "quit":
         print(GREEN + "Exiting the program. Goodbye!" + RESET)
         exit()
