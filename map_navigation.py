@@ -281,3 +281,28 @@ while True:
     elif command == "5" or command.lower() == "exit" or command.lower() == "quit":
         print(GREEN + "Exiting the program. Goodbye!" + RESET)
         exit()
+
+
+# Feature: Route Planning
+
+
+locations = {
+    "School": {"Mall": 5, "Hospital": 8, "Park": 3},
+    "Mall": {"School": 5, "Hospital": 4, "Park": 6},
+    "Hospital": {"School": 8, "Mall": 4, "Park": 7},
+    "Park": {"School": 3, "Mall": 6, "Hospital": 7}
+}
+print("Available Locations:")
+for place in locations:
+    print("-", place)
+
+start = input("\nEnter starting location: ")
+destination = input("Enter destination: ")
+
+if start in locations and destination in locations[start]:
+    distance = locations[start][destination]
+    print(f"\nBest route from {start} to {destination}")
+    print(f"Distance: {distance} km")
+    print("Status: Route successfully planned!")
+else:
+    print("\nInvalid location entered or route not available.")
